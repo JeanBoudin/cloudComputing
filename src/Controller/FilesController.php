@@ -21,7 +21,7 @@ class FilesController extends AbstractController
     }
 
     #[Route('/files', name: 'app_files')]
-    public function index(Request $request,FileUploader $file_uploader): Response
+    public function index(Request $request): Response
     {
 
         $form = $this->createForm(FilesType::class);
@@ -30,21 +30,19 @@ class FilesController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
+            $file = new Files();
             $formFiles = $form->getData();
 
-            $file = new Files();
-            foreach ($formFiles as $key => $value) {
+            $files = $form->get('upload_path')->getData();
+            $fileExtension = $files->guessExtension();
 
-                $file->setFilename($value);
+            $fileName = $form->get('filename')->getData().'.'.$fileExtension;
+            $localisation = 'upload/'.md5(uniqid()).'.'.$fileExtension;
 
-            }
+            $file->setFilename($fileName);
+            $file->setUploadPath($localisation);
 
-            $filename = $file_uploader->upload($file);
-
-            dd($file,$formFiles,$filename);
-
-
-            $this->entityManager->persist($formFiles);
+            $this->entityManager->persist($file);
             $this->entityManager->flush();
 
             $this->redirect('app_files');
