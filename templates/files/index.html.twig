@@ -7,4 +7,10 @@
     {{ form_start(form) }}
     {{ form_end(form)}}
 
+    {% for file in listFiles %}
+
+        <a href="{{ path('download_file', { 'filePath': file.upload_path }) }}">{{ file.filename }}</a> <br>
+
+    {% endfor %}
+
 {% endblock %}

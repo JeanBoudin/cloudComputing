@@ -17,7 +17,7 @@ class Files
     private ?string $filename = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $upload_path = null;
+    public ?string $upload_path = null;
 
     public function getId(): ?int
     {
