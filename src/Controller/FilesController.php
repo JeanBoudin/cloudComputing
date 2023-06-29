@@ -21,7 +21,7 @@ class FilesController extends AbstractController
     }
 
     #[Route('/files', name: 'app_files')]
-    public function index(Request $request,FileUploader $file_uploader): Response
+    public function index(Request $request, FileUploader $file_uploader): Response
     {
 
         $form = $this->createForm(FilesType::class);

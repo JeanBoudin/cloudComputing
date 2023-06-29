@@ -20,6 +20,20 @@
           $builder
             ->add('upload_path', FileType::class, [
               'label' => 'Veuillez choisir le fichier à télécharger',
+              'mapped' => false,
+              'required' => true,
+              'constraints' => [
+                new File([
+                  'mimeTypes' => [ // We want to let upload only txt, csv or Excel files
+                    'image/jpg',
+                    'image/jpeg',
+                    'image/png',
+                    'image/gif',
+                    'application/pdf',
+                  ],
+                  'maxSize' => '300k',
+                ])
+              ],
             ])
               ->add('filename', TextType::class)
 
