@@ -5,11 +5,13 @@ namespace App\Controller;
 use App\Entity\Files;
 use App\Form\FilesType;
 use Doctrine\ORM\EntityManagerInterface;
+use MicrosoftAzure\Storage\Blob\Models\GetBlobOptions;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use MicrosoftAzure\Storage\Blob\BlobRestProxy;
+use Exception;
 
 class FilesController extends AbstractController
 {
@@ -54,7 +56,7 @@ class FilesController extends AbstractController
 
             $file->setFilename($fileName);
             // Le chemin du fichier est maintenant dans Azure Blob Storage
-            $file->setUploadPath('https://sarahstockage123456789.blob.core.windows.net/your-container/' . $fileName);
+            $file->setUploadPath('https://sarahstockage123456789.blob.core.windows.net/bloup/' . $fileName);
 
             $this->entityManager->persist($file);
             $this->entityManager->flush();
@@ -73,23 +75,34 @@ class FilesController extends AbstractController
     #[Route('/download/{filePath}', name: 'download_file', requirements: ['filePath' => '.+'])]
     public function downloadFile($filePath): Response
     {
-        // $filePath est déjà le chemin complet du fichier
+        // Créez le client Azure Blob Storage
+        $connectionString = "DefaultEndpointsProtocol=https;AccountName=sarahstockage123456789;AccountKey=y4Eynf0q3RXz4f6ZVA+TSrIlL89TV0LKW91SZTNdG3JDfhxHLEoHF3QWO0bbCibx6aAXJqv6w0g1+AStrnWQbw==;EndpointSuffix=core.windows.net";
+        $blobClient = BlobRestProxy::createBlobService($connectionString);
 
-        // Vérifie si le fichier existe
-        if (!file_exists($filePath)) {
+        // Retirez le nom du conteneur du chemin du fichier
+        $containerName = 'bloup';
+        $blobName = str_replace('https://sarahstockage123456789.blob.core.windows.net/' . $containerName . '/', '', $filePath);
+
+        try {
+            var_dump($containerName);
+            var_dump($blobName);
+
+            // Télécharger le blob
+            $blob = $blobClient->getBlob($containerName, $blobName);
+
+            // Crée une réponse avec le blob à télécharger
+            $response = new Response(stream_get_contents($blob->getContentStream()));
+
+            // Définit le type MIME du blob
+            $response->headers->set('Content-Type', 'application/octet-stream');
+
+            // Définit le nom du blob téléchargé
+            $response->headers->set('Content-Disposition', 'attachment; filename="' . $blobName . '"');
+
+            return $response;
+        } catch (Exception $e) {
             throw $this->createNotFoundException('Le fichier n\'existe pas.');
         }
-
-        // Crée une réponse avec le fichier à télécharger
-        $response = new Response(file_get_contents($filePath));
-
-        // Définit le type MIME du fichier
-        $response->headers->set('Content-Type', 'application/octet-stream');
-
-        // Définit le nom du fichier téléchargé
-        $response->headers->set('Content-Disposition', 'attachment; filename="' . basename($filePath) . '"');
-
-        return $response;
     }
 
 }
